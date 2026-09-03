@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commission form</title>
+  <meta name="description" content="Card interativo de comissões de arte — skyartsies">
+
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="card" id="card">
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- HEADER                                  -->
+    <!-- ═══════════════════════════════════════ -->
+    <header class="card-header">
+      <div class="header-decor"></div>
+      <img src="assets/avatar.jpg" alt="Avatar do artista" class="avatar">
+      <h1 class="artist-name">Comms form</h1>
+      <p class="artist-bio">formulário de comissões skyartsies</p>
+      <span class="status-badge" id="status-badge">COMMS:OPEN</span>
+    </header>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- GALERIA / BANNER                        -->
+    <!-- ═══════════════════════════════════════ -->
+    <section class="section gallery-section">
+      <img src="assets/sealutations-seal.gif" alt="Sealutations banner" class="gallery-banner">
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- AVISO                                   -->
+    <!-- ═══════════════════════════════════════ -->
+    <section class="section notice-section">
+      <div class="notice-card">
+        <h2 class="section-title notice-title">aviso importante!</h2>
+        <p class="notice-text">
+          este é o formulário pra envio de comissões, caso você não tenha lido meu carrd que contém galeria de artes,
+          termos e regras, dê uma passada lá >>
+          <a id="linkCard" href="https://sky19comms.carrd.co/" target="_blank" rel="noopener noreferrer">CARRD
+            COMISSÕES</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- FORMULÁRIO DE COMISSÃO                  -->
+    <!-- ═══════════════════════════════════════ -->
+    <form id="commission-form" class="section form-section" novalidate>
+
+      <h2 class="section-title">faça seu pedido!</h2>
+
+      <!-- Dados do cliente -->
+      <fieldset class="form-block">
+        <legend class="form-block-title">
+          <span class="form-block-number">1</span>
+          seus dados
+        </legend>
+        <div class="form-group">
+          <label for="client-name">nome</label>
+          <input type="text" id="client-name" name="nome" placeholder="seu nome ou nickname" autocomplete="name"
+            required>
+          <span class="field-error" id="error-name"></span>
+        </div>
+        <div class="form-group">
+          <label for="client-email">e-mail</label>
+          <input type="email" id="client-email" name="email" placeholder="seu@email.com" autocomplete="email" required>
+          <span class="field-error" id="error-email"></span>
+        </div>
+      </fieldset>
+
+      <!-- Tabela de preços interativa -->
+      <fieldset class="form-block">
+        <legend class="form-block-title">
+          <span class="form-block-number">2</span>
+          tipo de comissão
+        </legend>
+        <p class="form-block-hint">selecione uma opção da tabela</p>
+        <div class="price-table" id="price-table" role="radiogroup" aria-label="Tabela de preços">
+          <!-- Rendered by JS -->
+          <div class="price-table-loading">
+            <div class="spinner"></div>
+            <span>carregando opções...</span>
+          </div>
+        </div>
+        <span class="field-error" id="error-base"></span>
+      </fieldset>
+
+      <!-- Adicionais -->
+      <fieldset class="form-block">
+        <legend class="form-block-title">
+          <span class="form-block-number">3</span>
+          adicionais
+        </legend>
+        <p class="form-block-hint">marque quantos quiser (opcional)</p>
+        <div class="extras-list" id="extras-list">
+          <!-- Rendered by JS -->
+        </div>
+      </fieldset>
+
+      <!-- Observações -->
+      <fieldset class="form-block">
+        <legend class="form-block-title">
+          <span class="form-block-number">4</span>
+          observações
+        </legend>
+        <div class="form-group">
+          <textarea id="observations" name="observacoes" rows="4"
+            placeholder="escreva uma mensagem se quiser especificar algo, ou só me dar um oi c:"></textarea>
+        </div>
+      </fieldset>
+
+    </form>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- RESUMO + ENVIAR                         -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="order-summary" id="order-summary">
+      <div class="summary-items" id="summary-items">
+        <span class="summary-empty">nenhum item selecionado</span>
+      </div>
+      <div class="summary-footer">
+        <div class="total-display">
+          <span class="total-label">total</span>
+          <span class="total-value" id="total-value">R$ 0,00</span>
+        </div>
+        <button type="submit" form="commission-form" class="submit-btn" id="submit-btn" disabled>
+          <span class="btn-text">enviar pedido</span>
+          <span class="btn-loader" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- .card -->
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- MODAL DE CONFIRMAÇÃO                    -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" id="modal">
+      <img src="assets/modal-success.png" alt="Ícone do modal" class="modal-icon" id="modal-icon">
+      <h3 class="modal-title" id="modal-title">pedido enviado!</h3>
+      <p class="modal-text" id="modal-text">
+        Seu pedido foi recebido com sucesso! Entrarei em contato em breve.
+      </p>
+      <button class="modal-btn" id="modal-close">fechar</button>
+    </div>
+  </div>
+
+  <!-- config.js é gerado pelo entrypoint do container Docker -->
+  <!-- Contém window.API_URL para o JS saber onde está o backend -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
