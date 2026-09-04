@@ -247,6 +247,54 @@ body {
   background: #22c55e;
 }
 
+/* Social links */
+.social-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.875rem;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-default);
+  background: var(--surface-slot);
+  color: var(--blue-400);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  transition: all 0.15s var(--ease);
+}
+
+.social-link:hover,
+.social-link:focus-visible {
+  border-color: var(--blue-500);
+  background: #192538;
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+.social-icon {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+  flex-shrink: 0;
+  filter: brightness(0) saturate(100%) invert(67%) sepia(50%) saturate(2250%) hue-rotate(190deg) brightness(102%) contrast(98%);
+  transition: filter 0.15s var(--ease);
+}
+
+.social-link:hover .social-icon,
+.social-link:focus-visible .social-icon {
+  filter: brightness(0) invert(1);
+}
+
 /* ═══════════════════════════════════════
    SECTIONS (shared)
    ═══════════════════════════════════════ */
