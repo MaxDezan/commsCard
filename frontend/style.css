@@ -12,17 +12,17 @@
 
 /* ─── Tokens ─── */
 :root {
-  /* Minimalist Blue Accents (Clean, solid, clear) */
+  /* Minimalist Desaturated Slate Blue Accents */
   --blue-900: #0d1522;
   --blue-800: #121f33;
-  --blue-700: #1b2e4c;
-  --blue-600: #2563eb; /* Primary action blue */
-  --blue-500: #3b82f6; /* Focus & active border */
-  --blue-400: #60a5fa; /* Title & heading text blue */
-  --blue-300: #93c5fd; /* Soft blue text */
-  --blue-200: #bfdbfe;
-  --blue-100: rgba(59, 130, 246, 0.12); /* Subtle blue tint */
-  --blue-50:  rgba(59, 130, 246, 0.06);
+  --blue-700: #1c2b42;
+  --blue-600: #356294; /* Primary action blue (muted / desaturated) */
+  --blue-500: #4676a6; /* Focus & active border */
+  --blue-400: #7f9ebf; /* Title & heading text blue (soft desaturated slate) */
+  --blue-300: #a5bdd5; /* Soft blue text */
+  --blue-200: #c6d5e3;
+  --blue-100: rgba(70, 118, 166, 0.14); /* Subtle blue tint */
+  --blue-50:  rgba(70, 118, 166, 0.07);
 
   /* Dark Neutral Surfaces (Minimalist charcoal / slate) */
   --bg-page:          #0b0f17; /* Background da página */
@@ -35,11 +35,11 @@
   --border-subtle:    #1d2636;
   --border-default:   #253246;
   --border-hover:     #3b4d69;
-  --border-focus:     #3b82f6;
+  --border-focus:     #4676a6;
 
   /* Typography */
   --text-title:       #f1f5f9;
-  --text-blue:        #60a5fa;
+  --text-blue:        #7f9ebf;
   --text-primary:     #e2e8f0;
   --text-secondary:   #94a3b8;
   --text-muted:       #64748b;
@@ -119,7 +119,7 @@ html {
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background-color: #3b82f6;
+  background-color: var(--blue-500);
 }
 
 ::-webkit-scrollbar-corner {
@@ -283,8 +283,7 @@ body {
   height: 1rem;
   display: block;
   flex-shrink: 0;
-  filter: brightness(0) saturate(100%) invert(67%) sepia(50%) saturate(2250%) hue-rotate(190deg) brightness(102%) contrast(98%);
-  transition: filter 0.15s var(--ease);
+  transition: opacity 0.15s var(--ease), filter 0.15s var(--ease);
 }
 
 .social-link:hover .social-icon,
@@ -470,7 +469,7 @@ fieldset.form-block:last-of-type {
 .form-group input:focus,
 .form-group textarea:focus {
   border-color: var(--blue-500);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 2px rgba(70, 118, 166, 0.25);
 }
 
 .form-group input::placeholder,
@@ -969,7 +968,7 @@ fieldset.form-block:last-of-type {
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: #3f73a3;
   transform: translateY(-1px);
 }
 
@@ -1080,7 +1079,7 @@ fieldset.form-block:last-of-type {
 }
 
 .modal-btn:hover {
-  background: #1d4ed8;
+  background: #3f73a3;
 }
 
 /* Error variant */
