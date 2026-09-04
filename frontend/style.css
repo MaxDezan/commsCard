@@ -229,14 +229,13 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.85rem;
+  padding: 0.25rem 0.5rem;
   color: var(--blue-400);
-  background: #152030;
+  background: transparent;
   border: none;
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  border-radius: 100px;
 }
 
 .status-badge::before {
@@ -252,9 +251,9 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   flex-wrap: wrap;
-  margin-top: 0.875rem;
+  margin-top: 0.75rem;
 }
 
 .social-link {
@@ -262,10 +261,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: 999px;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
   border: none;
-  background: var(--surface-slot);
   color: var(--blue-400);
   text-decoration: none;
   font-weight: 600;
@@ -275,7 +273,7 @@ body {
 
 .social-link:hover,
 .social-link:focus-visible {
-  background: #1c293e;
+  background: transparent;
   color: var(--white);
   transform: translateY(-1px);
 }
