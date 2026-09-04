@@ -22,20 +22,21 @@
   let selectedBase = null;          // single-select categories
   let selectedBaseQtds = new Map(); // multi-select: id → quantity
   let selectedAdicionais = new Set();
+  let extraCharacters = [];           // [{tipo, estilo, baseId, preco}]
 
   // ─── DOM refs ───
-  const priceTable    = document.getElementById('price-table');
-  const extrasList    = document.getElementById('extras-list');
-  const totalValue    = document.getElementById('total-value');
-  const summaryItems  = document.getElementById('summary-items');
-  const submitBtn     = document.getElementById('submit-btn');
-  const form          = document.getElementById('commission-form');
-  const modalOverlay  = document.getElementById('modal-overlay');
-  const modalClose    = document.getElementById('modal-close');
-  const modalEl       = document.getElementById('modal');
-  const modalIcon     = document.getElementById('modal-icon');
-  const modalTitle    = document.getElementById('modal-title');
-  const modalText     = document.getElementById('modal-text');
+  const priceTable = document.getElementById('price-table');
+  const extrasList = document.getElementById('extras-list');
+  const totalValue = document.getElementById('total-value');
+  const summaryItems = document.getElementById('summary-items');
+  const submitBtn = document.getElementById('submit-btn');
+  const form = document.getElementById('commission-form');
+  const modalOverlay = document.getElementById('modal-overlay');
+  const modalClose = document.getElementById('modal-close');
+  const modalEl = document.getElementById('modal');
+  const modalIcon = document.getElementById('modal-icon');
+  const modalTitle = document.getElementById('modal-title');
+  const modalText = document.getElementById('modal-text');
 
   // ═══════════════════════════════════════
   // INIT — fetch data or use fallback
@@ -62,6 +63,29 @@
     renderPriceTable();
     renderExtras();
     updateSummary();
+
+    // Close any open custom selects when clicking outside or pressing Escape
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.c-select')) {
+        document.querySelectorAll('.c-select.open').forEach(el => el.classList.remove('open'));
+      }
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.c-select.open').forEach(el => el.classList.remove('open'));
+      }
+    });
+
+    // Restore scroll position after async content renders
+    const savedScroll = sessionStorage.getItem('comms_scroll_pos');
+    if (savedScroll) {
+      setTimeout(() => {
+        window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'instant' });
+      }, 50);
+    }
+    window.addEventListener('scroll', () => {
+      sessionStorage.setItem('comms_scroll_pos', String(window.scrollY));
+    }, { passive: true });
   }
 
   // Dados estáticos caso o backend não esteja disponível
@@ -69,39 +93,39 @@
     return {
       bases: [
         // arte padrão
-        { id: 1,  categoria: 'arte padrão',          tipo: '1/2 corpo', estilo: 'sketch',   preco: 15 },
-        { id: 2,  categoria: 'arte padrão',          tipo: '1/2 corpo', estilo: 'p&b',      preco: 25 },
-        { id: 3,  categoria: 'arte padrão',          tipo: '1/2 corpo', estilo: 'colorido', preco: 45 },
-        { id: 4,  categoria: 'arte padrão',          tipo: 'full body', estilo: 'sketch',   preco: 20 },
-        { id: 5,  categoria: 'arte padrão',          tipo: 'full body', estilo: 'p&b',      preco: 35 },
-        { id: 6,  categoria: 'arte padrão',          tipo: 'full body', estilo: 'colorido', preco: 55 },
+        { id: 1, categoria: 'arte padrão', tipo: '1/2 corpo', estilo: 'sketch', preco: 15 },
+        { id: 2, categoria: 'arte padrão', tipo: '1/2 corpo', estilo: 'p&b', preco: 25 },
+        { id: 3, categoria: 'arte padrão', tipo: '1/2 corpo', estilo: 'colorido', preco: 45 },
+        { id: 4, categoria: 'arte padrão', tipo: 'full body', estilo: 'sketch', preco: 20 },
+        { id: 5, categoria: 'arte padrão', tipo: 'full body', estilo: 'p&b', preco: 35 },
+        { id: 6, categoria: 'arte padrão', tipo: 'full body', estilo: 'colorido', preco: 55 },
         // design de personagem
-        { id: 7,  categoria: 'icon', tipo: '',          estilo: 'sketch',   preco: 10 },
-        { id: 8,  categoria: 'icon', tipo: '',          estilo: 'p&b',      preco: 15 },
-        { id: 9,  categoria: 'icon', tipo: '',          estilo: 'colorido', preco: 25 },
+        { id: 7, categoria: 'icon', tipo: '', estilo: 'sketch', preco: 10 },
+        { id: 8, categoria: 'icon', tipo: '', estilo: 'p&b', preco: 15 },
+        { id: 9, categoria: 'icon', tipo: '', estilo: 'colorido', preco: 25 },
         // tipo 3
-        { id: 10, categoria: 'design de personagem',               tipo: 'icon',      estilo: 'sketch',   preco: 6  },
-        { id: 11, categoria: 'design de personagem',               tipo: 'icon',      estilo: 'p&b',      preco: 8  },
-        { id: 12, categoria: 'design de personagem',               tipo: 'icon',      estilo: 'colorido', preco: 15 },
-        { id: 13, categoria: 'design de personagem',               tipo: '1/2 corpo', estilo: 'sketch',   preco: 8  },
-        { id: 14, categoria: 'design de personagem',               tipo: '1/2 corpo', estilo: 'p&b',      preco: 15 },
-        { id: 15, categoria: 'design de personagem',               tipo: '1/2 corpo', estilo: 'colorido', preco: 20 },
-        { id: 16, categoria: 'design de personagem',               tipo: 'full body', estilo: 'sketch',   preco: 10 },
-        { id: 17, categoria: 'design de personagem',               tipo: 'full body', estilo: 'p&b',      preco: 20 },
-        { id: 18, categoria: 'design de personagem',               tipo: 'full body', estilo: 'colorido', preco: 30 },
+        { id: 10, categoria: 'design de personagem', tipo: 'icon', estilo: 'sketch', preco: 6 },
+        { id: 11, categoria: 'design de personagem', tipo: 'icon', estilo: 'p&b', preco: 8 },
+        { id: 12, categoria: 'design de personagem', tipo: 'icon', estilo: 'colorido', preco: 15 },
+        { id: 13, categoria: 'design de personagem', tipo: '1/2 corpo', estilo: 'sketch', preco: 8 },
+        { id: 14, categoria: 'design de personagem', tipo: '1/2 corpo', estilo: 'p&b', preco: 15 },
+        { id: 15, categoria: 'design de personagem', tipo: '1/2 corpo', estilo: 'colorido', preco: 20 },
+        { id: 16, categoria: 'design de personagem', tipo: 'full body', estilo: 'sketch', preco: 10 },
+        { id: 17, categoria: 'design de personagem', tipo: 'full body', estilo: 'p&b', preco: 20 },
+        { id: 18, categoria: 'design de personagem', tipo: 'full body', estilo: 'colorido', preco: 30 },
         // tipo 4
-        { id: 19, categoria: 'chibi',               tipo: '1/2 corpo', estilo: 'sketch',   preco: 10 },
-        { id: 20, categoria: 'chibi',               tipo: '1/2 corpo', estilo: 'p&b',      preco: 15 },
-        { id: 21, categoria: 'chibi',               tipo: '1/2 corpo', estilo: 'colorido', preco: 25 },
-        { id: 22, categoria: 'chibi',               tipo: 'full body', estilo: 'sketch',   preco: 12 },
-        { id: 23, categoria: 'chibi',               tipo: 'full body', estilo: 'p&b',      preco: 25 },
-        { id: 24, categoria: 'chibi',               tipo: 'full body', estilo: 'colorido', preco: 35 },
+        { id: 19, categoria: 'chibi', tipo: '1/2 corpo', estilo: 'sketch', preco: 10 },
+        { id: 20, categoria: 'chibi', tipo: '1/2 corpo', estilo: 'p&b', preco: 15 },
+        { id: 21, categoria: 'chibi', tipo: '1/2 corpo', estilo: 'colorido', preco: 25 },
+        { id: 22, categoria: 'chibi', tipo: 'full body', estilo: 'sketch', preco: 12 },
+        { id: 23, categoria: 'chibi', tipo: 'full body', estilo: 'p&b', preco: 25 },
+        { id: 24, categoria: 'chibi', tipo: 'full body', estilo: 'colorido', preco: 35 },
       ],
       adicionais: [
-        { id: 25, nome: 'Render detalhada',    descricao: 'Acabamento com mais detalhes', preco: 15 },
-        { id: 26, nome: 'Fundo simples',       descricao: 'Fundo com cor ou gradiente',  preco: 10 },
-        { id: 27, nome: 'Fundo detalhado',     descricao: 'Fundo com cenário ilustrado',  preco: 25 },
-        { id: 28, nome: 'Personagem adicional',descricao: '+1 personagem na arte',        preco: 30 },
+        { id: 25, nome: 'Render detalhada', descricao: 'Acabamento com mais detalhes', preco: 15 },
+        { id: 26, nome: 'NSFW/gore complexo', descricao: 'NSFW/gore complexos na arte', preco: 25 },
+        { id: 27, nome: 'Fundo complexo', descricao: 'Fundo com composição detalhada', preco: 20 },
+        { id: 28, nome: 'Personagem adicional', descricao: '+1 personagem na arte (50% do valor base)', preco: 0, dinamico: true },
       ],
     };
   }
@@ -135,6 +159,21 @@
         selectedCategoria = tab.dataset.cat;
         selectedBase = null;
         selectedBaseQtds.clear();
+
+        // Reset extra characters (options change per category)
+        extraCharacters = [];
+        const ecPanel = document.getElementById('extra-chars-panel');
+        if (ecPanel) ecPanel.style.display = 'none';
+        const ecSlots = document.getElementById('extra-chars-slots');
+        if (ecSlots) ecSlots.innerHTML = '';
+        const dynItem = extrasList.querySelector('.extra-item--dynamic');
+        if (dynItem) {
+          dynItem.classList.remove('selected');
+          dynItem.setAttribute('aria-checked', 'false');
+          const cb = dynItem.querySelector('input[type="checkbox"]');
+          if (cb) cb.checked = false;
+        }
+
         priceTable.classList.remove('invalid');
         clearError('error-base');
         renderPriceTable();
@@ -153,10 +192,10 @@
   }
 
   function renderPriceTable() {
-    const isMulti     = selectedCategoria === MULTI_CATEGORIA;
+    const isMulti = selectedCategoria === MULTI_CATEGORIA;
     const basesAtivas = comissoes.bases.filter(b => b.categoria === selectedCategoria);
-    const tipos       = [...new Set(basesAtivas.map(b => b.tipo))];
-    const estilos     = [...new Set(basesAtivas.map(b => b.estilo))];
+    const tipos = [...new Set(basesAtivas.map(b => b.tipo))];
+    const estilos = [...new Set(basesAtivas.map(b => b.estilo))];
 
     priceTable.style.setProperty('--cols', estilos.length);
 
@@ -217,7 +256,7 @@
     if (isMulti) {
       priceTable.querySelectorAll('.qty-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          const id  = parseInt(btn.dataset.id);
+          const id = parseInt(btn.dataset.id);
           const cur = selectedBaseQtds.get(id) || 0;
 
           if (btn.classList.contains('qty-plus')) {
@@ -228,7 +267,7 @@
           }
 
           // Update cell UI in-place
-          const cell   = btn.closest('.price-cell--multi');
+          const cell = btn.closest('.price-cell--multi');
           const newQty = selectedBaseQtds.get(id) || 0;
           cell.querySelector('.qty-count').textContent = newQty;
           cell.classList.toggle('has-qty', newQty > 0);
@@ -266,24 +305,46 @@
     let html = '';
 
     comissoes.adicionais.forEach(item => {
-      html += `
-        <div class="extra-item" data-id="${item.id}" tabindex="0" role="checkbox" aria-checked="false">
-          <input type="checkbox" id="extra-${item.id}" value="${item.id}" tabindex="-1">
-          <div class="extra-check">
-            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      if (item.dinamico) {
+        // Dynamic item — Personagem adicional
+        html += `
+          <div class="extra-item extra-item--dynamic" data-id="${item.id}" tabindex="0" role="checkbox" aria-checked="false">
+            <input type="checkbox" id="extra-${item.id}" value="${item.id}" tabindex="-1">
+            <div class="extra-check">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="extra-info">
+              <div class="extra-name">${escHtml(item.nome)}</div>
+              <div class="extra-desc">${escHtml(item.descricao)}</div>
+            </div>
+            <div class="extra-price extra-price--dynamic">+50%</div>
           </div>
-          <div class="extra-info">
-            <div class="extra-name">${escHtml(item.nome)}</div>
-            <div class="extra-desc">${escHtml(item.descricao)}</div>
-          </div>
-          <div class="extra-price">+R$${item.preco}</div>
-        </div>`;
+          <div class="extra-chars-panel" id="extra-chars-panel" style="display:none;">
+            <div class="extra-chars-slots" id="extra-chars-slots"></div>
+            <button type="button" class="extra-char-add-btn" id="extra-char-add-btn">
+              + adicionar outro personagem
+            </button>
+          </div>`;
+      } else {
+        html += `
+          <div class="extra-item" data-id="${item.id}" tabindex="0" role="checkbox" aria-checked="false">
+            <input type="checkbox" id="extra-${item.id}" value="${item.id}" tabindex="-1">
+            <div class="extra-check">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="extra-info">
+              <div class="extra-name">${escHtml(item.nome)}</div>
+              <div class="extra-desc">${escHtml(item.descricao)}</div>
+            </div>
+            <div class="extra-price">+R$${item.preco}</div>
+          </div>`;
+      }
     });
 
     extrasList.innerHTML = html;
 
-    // Event listeners — click anywhere on the item to toggle
-    extrasList.querySelectorAll('.extra-item').forEach(item => {
+    // Event listeners — regular extras (non-dynamic)
+    extrasList.querySelectorAll('.extra-item:not(.extra-item--dynamic)').forEach(item => {
       const toggle = () => {
         const cb = item.querySelector('input[type="checkbox"]');
         cb.checked = !cb.checked;
@@ -307,12 +368,206 @@
         toggle();
       });
 
-      // Keyboard accessibility
       item.addEventListener('keydown', e => {
         if (e.key === ' ' || e.key === 'Enter') {
           e.preventDefault();
           toggle();
         }
+      });
+    });
+
+    // Event listener — dynamic extra (Personagem adicional)
+    const dynamicItem = extrasList.querySelector('.extra-item--dynamic');
+    if (dynamicItem) {
+      const toggleDynamic = () => {
+        const cb = dynamicItem.querySelector('input[type="checkbox"]');
+        cb.checked = !cb.checked;
+        const panel = document.getElementById('extra-chars-panel');
+
+        if (cb.checked) {
+          dynamicItem.classList.add('selected');
+          dynamicItem.setAttribute('aria-checked', 'true');
+          panel.style.display = '';
+          if (extraCharacters.length === 0) addExtraCharacter();
+        } else {
+          dynamicItem.classList.remove('selected');
+          dynamicItem.setAttribute('aria-checked', 'false');
+          panel.style.display = 'none';
+          extraCharacters = [];
+          renderExtraCharsSlots();
+        }
+        updateSummary();
+      };
+
+      dynamicItem.addEventListener('click', e => {
+        if (e.target.tagName === 'INPUT') return;
+        toggleDynamic();
+      });
+      dynamicItem.addEventListener('keydown', e => {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleDynamic(); }
+      });
+
+      document.getElementById('extra-char-add-btn')
+        .addEventListener('click', () => { addExtraCharacter(); });
+    }
+  }
+
+  // ─── Extra Characters config & helpers ───
+  const EXTRA_CHAR_TYPES = [
+    { group: 'arte padrão', label: '1/2 corpo', categoria: 'arte padrão', tipo: '1/2 corpo' },
+    { group: 'arte padrão', label: 'full body', categoria: 'arte padrão', tipo: 'full body' },
+    { group: 'icon', label: 'icon', categoria: 'icon', tipo: '' },
+    { group: 'chibi', label: 'chibi 1/2 corpo', categoria: 'chibi', tipo: '1/2 corpo' },
+    { group: 'chibi', label: 'chibi full body', categoria: 'chibi', tipo: 'full body' },
+  ];
+
+  const EXTRA_CHAR_ESTILOS = ['sketch', 'p&b', 'colorido'];
+
+  function addExtraCharacter() {
+    extraCharacters.push({ tipo: '', estilo: '', baseId: null, preco: 0, precoOriginal: 0 });
+    renderExtraCharsSlots();
+  }
+
+  function removeExtraCharacter(index) {
+    extraCharacters.splice(index, 1);
+    if (extraCharacters.length === 0) {
+      const dynamicItem = extrasList.querySelector('.extra-item--dynamic');
+      if (dynamicItem) {
+        const cb = dynamicItem.querySelector('input[type="checkbox"]');
+        cb.checked = false;
+        dynamicItem.classList.remove('selected');
+        dynamicItem.setAttribute('aria-checked', 'false');
+        document.getElementById('extra-chars-panel').style.display = 'none';
+      }
+    }
+    renderExtraCharsSlots();
+    updateSummary();
+  }
+
+  function renderExtraCharsSlots() {
+    const container = document.getElementById('extra-chars-slots');
+    if (!container) return;
+
+    let html = '';
+    extraCharacters.forEach((char, index) => {
+      const typeDef = EXTRA_CHAR_TYPES.find(t => t.label === char.tipo);
+      if (typeDef && char.estilo) {
+        const matchedBase = comissoes.bases.find(b =>
+          b.categoria === typeDef.categoria &&
+          (typeDef.tipo === '' ? (!b.tipo || b.tipo === '') : b.tipo === typeDef.tipo) &&
+          b.estilo === char.estilo
+        );
+        if (matchedBase) {
+          char.baseId = matchedBase.id;
+          char.preco = matchedBase.preco / 2;
+          char.precoOriginal = matchedBase.preco;
+        } else {
+          char.baseId = null;
+          char.preco = 0;
+          char.precoOriginal = 0;
+        }
+      } else {
+        char.baseId = null;
+        char.preco = 0;
+        char.precoOriginal = 0;
+      }
+
+      // Grouped tipo options
+      const groups = ['arte padrão', 'icon', 'chibi'];
+      let tipoOptionsHtml = '';
+      groups.forEach(grp => {
+        const items = EXTRA_CHAR_TYPES.filter(t => t.group === grp);
+        tipoOptionsHtml += `<div class="c-select-group">`;
+        tipoOptionsHtml += `  <div class="c-select-group-label">${escHtml(grp)}</div>`;
+        items.forEach(item => {
+          const isSel = char.tipo === item.label;
+          tipoOptionsHtml += `<div class="c-select-option${isSel ? ' selected' : ''}" data-value="${escHtml(item.label)}">${escHtml(item.label)}</div>`;
+        });
+        tipoOptionsHtml += `</div>`;
+      });
+
+      // Estilo options
+      let estiloOptionsHtml = '';
+      EXTRA_CHAR_ESTILOS.forEach(est => {
+        const isSel = char.estilo === est;
+        estiloOptionsHtml += `<div class="c-select-option${isSel ? ' selected' : ''}" data-value="${escHtml(est)}">${escHtml(est)}</div>`;
+      });
+
+      const tipoLabel = char.tipo || 'tipo...';
+      const estiloLabel = char.estilo || 'estilo...';
+
+      html += `
+        <div class="extra-char-slot">
+          <div class="extra-char-header">
+            <span class="extra-char-label">personagem extra #${index + 1}</span>
+            <button type="button" class="extra-char-remove" data-index="${index}" aria-label="remover personagem extra" title="Remover">×</button>
+          </div>
+          <div class="extra-char-selectors">
+            <div class="c-select-wrapper">
+              <div class="c-select" data-index="${index}" data-field="tipo">
+                <button type="button" class="c-select-trigger" aria-haspopup="listbox">
+                  <span class="c-select-value${!char.tipo ? ' placeholder' : ''}">${escHtml(tipoLabel)}</span>
+                  <svg class="c-select-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="c-select-dropdown" role="listbox">
+                  ${tipoOptionsHtml}
+                </div>
+              </div>
+            </div>
+            <div class="c-select-wrapper">
+              <div class="c-select" data-index="${index}" data-field="estilo">
+                <button type="button" class="c-select-trigger" aria-haspopup="listbox">
+                  <span class="c-select-value${!char.estilo ? ' placeholder' : ''}">${escHtml(estiloLabel)}</span>
+                  <svg class="c-select-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="c-select-dropdown" role="listbox">
+                  ${estiloOptionsHtml}
+                </div>
+              </div>
+            </div>
+          </div>
+          ${char.baseId
+            ? `<div class="extra-char-price">
+                <span class="extra-char-price-value">${formatCurrency(char.preco)}</span>
+                <span class="extra-char-price-detail">(50% de ${formatCurrency(char.precoOriginal)})</span>
+              </div>`
+            : `<div class="extra-char-price extra-char-price--empty">selecione tipo e estilo</div>`
+          }
+        </div>`;
+    });
+
+    container.innerHTML = html;
+
+    // Dropdown toggle
+    container.querySelectorAll('.c-select-trigger').forEach(trigger => {
+      trigger.addEventListener('click', e => {
+        e.stopPropagation();
+        const selectEl = trigger.closest('.c-select');
+        const isOpen = selectEl.classList.contains('open');
+        document.querySelectorAll('.c-select.open').forEach(el => el.classList.remove('open'));
+        if (!isOpen) selectEl.classList.add('open');
+      });
+    });
+
+    // Dropdown option click
+    container.querySelectorAll('.c-select-option').forEach(option => {
+      option.addEventListener('click', e => {
+        e.stopPropagation();
+        const selectEl = option.closest('.c-select');
+        const index = parseInt(selectEl.dataset.index);
+        const field = selectEl.dataset.field;
+        extraCharacters[index][field] = option.dataset.value;
+        selectEl.classList.remove('open');
+        renderExtraCharsSlots();
+        updateSummary();
+      });
+    });
+
+    // Remove buttons
+    container.querySelectorAll('.extra-char-remove').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        removeExtraCharacter(parseInt(btn.dataset.index));
       });
     });
   }
@@ -332,7 +587,11 @@
     }
     selectedAdicionais.forEach(id => {
       const item = comissoes.adicionais.find(a => a.id === id);
-      if (item) total += item.preco;
+      if (item && !item.dinamico) total += item.preco;
+    });
+    // Extra characters (50% do valor base)
+    extraCharacters.forEach(char => {
+      if (char.preco) total += char.preco;
     });
     return total;
   }
@@ -368,9 +627,18 @@
 
     selectedAdicionais.forEach(id => {
       const item = comissoes.adicionais.find(a => a.id === id);
-      if (item) {
+      if (item && !item.dinamico) {
         tags += `<span class="summary-tag">${escHtml(item.nome)}
           <span class="tag-price">+R$${item.preco}</span></span>`;
+      }
+    });
+
+    // Extra characters
+    extraCharacters.forEach((char, i) => {
+      if (char.baseId && char.preco) {
+        const label = [char.tipo, char.estilo].filter(Boolean).join(' · ');
+        tags += `<span class="summary-tag">extra #${i + 1} · ${escHtml(label)}
+          <span class="tag-price">+${formatCurrency(char.preco)}</span></span>`;
       }
     });
 
@@ -396,11 +664,21 @@
     // Validate
     if (!validate()) return;
 
-    const nome        = document.getElementById('client-name').value.trim();
-    const email       = document.getElementById('client-email').value.trim();
+    const nome = document.getElementById('client-name').value.trim();
+    const email = document.getElementById('client-email').value.trim();
     const observacoes = document.getElementById('observations').value.trim();
 
-    const pedido = { cliente: { nome, email }, adicionais: [...selectedAdicionais], observacoes };
+    const pedido = {
+      cliente: { nome, email },
+      adicionais: [...selectedAdicionais].filter(id => {
+        const item = comissoes.adicionais.find(a => a.id === id);
+        return item && !item.dinamico;
+      }),
+      personagensAdicionais: extraCharacters
+        .filter(c => c.baseId)
+        .map(c => ({ baseId: c.baseId })),
+      observacoes
+    };
 
     if (selectedCategoria === MULTI_CATEGORIA) {
       pedido.bases = [];
@@ -446,7 +724,7 @@
   function validate() {
     let ok = true;
 
-    const name  = document.getElementById('client-name');
+    const name = document.getElementById('client-name');
     const email = document.getElementById('client-email');
 
     // Name
@@ -538,6 +816,7 @@
     selectedBase = null;
     selectedBaseQtds.clear();
     selectedAdicionais.clear();
+    extraCharacters = [];
 
     // Re-render table to reset steppers / radios
     renderPriceTable();
@@ -551,6 +830,12 @@
       item.setAttribute('aria-checked', 'false');
     });
     extrasList.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+
+    // Hide extra chars panel
+    const ecPanel = document.getElementById('extra-chars-panel');
+    if (ecPanel) ecPanel.style.display = 'none';
+    const ecSlots = document.getElementById('extra-chars-slots');
+    if (ecSlots) ecSlots.innerHTML = '';
 
     // Clear errors
     form.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));

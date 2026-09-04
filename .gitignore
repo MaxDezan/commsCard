@@ -1,0 +1,14 @@
+# Environment variables (credenciais privadas)
+.env
+backend/.env
+*.env
+!*.env.example
+
+# Dependências
+node_modules/
+
+# IDEs e sistema operacional
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

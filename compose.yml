@@ -1,13 +1,8 @@
 services:
   backend:
     build: ./backend
-    environment:
-      - PORT=3000
-      - SMTP_HOST=${SMTP_HOST:-smtp.example.com}
-      - SMTP_PORT=${SMTP_PORT:-587}
-      - SMTP_USER=${SMTP_USER:-}
-      - SMTP_PASS=${SMTP_PASS:-}
-      - EMAIL_DESTINO=${EMAIL_DESTINO:-}
+    env_file:
+      - ./backend/.env
     ports:
       - "3001:3000"  # Exposed for manual testing; not needed for frontend access
     networks:

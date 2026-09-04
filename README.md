@@ -170,3 +170,26 @@ depends_on:
 ### O que `depends_on` NÃO garante:
 * **Prontidão da Aplicação (Readiness)**: Ele **não** espera a aplicação Node.js/Express carregar completamente na memória, conectar-se ao banco/serviço SMTP ou estar pronta para receber requisições HTTP na porta 3000. Ele apenas aguarda o processo de inicialização do container ter início a nível de daemon do Docker.
 * *(Para garantir prontidão em cenários avançados, utilizam-se `healthcheck` em conjunto com `condition: service_healthy`)*.
+
+---
+
+## 11. Dificuldades Encontradas e Soluções Adotadas
+
+Durante o desenvolvimento e a orquestração do projeto com Docker Compose, foram enfrentados e solucionados os seguintes desafios técnicos:
+
+### 1. Injeção de Variáveis de Ambiente em Front-end Estático (Client-Side)
+* **Dificuldade**: Aplicações puramente estáticas (HTML/CSS/JS) rodam no navegador do usuário final e não no servidor, não tendo acesso a `process.env`. Se o endereço do back-end fosse hardcoded no JavaScript (ex: `http://localhost:3000`), a aplicação não funcionaria em outros ambientes e violaria a exigência de usar variáveis de ambiente do Docker Compose.
+* **Solução**: Foi implementada uma arquitetura com **Nginx atuando como Servidor Web e Proxy Reverso**. O container do front-end executa um script [`entrypoint.sh`](frontend/entrypoint.sh) na inicialização que lê a variável `API_URL`, substitui o upstream no [`nginx.conf.template`](frontend/nginx.conf.template) via `envsubst` e gera dinamicamente a configuração do Nginx. Dessa forma, as chamadas da API são feitas de forma relativa (`/api/...`) e roteadas internamente pelo Nginx diretamente para `http://backend:3000`, eliminando URLs fixas e prevenindo problemas de CORS.
+
+### 2. Carregamento de Credenciais e Variáveis no Back-end
+* **Dificuldade**: Ao preencher as configurações do serviço SMTP no arquivo `.env` dentro do diretório `backend/`, o Docker Compose originalmente utilizava valores padrão (`smtp.example.com`) declarados no arquivo de composição quando não encontrados na raiz, gerando falha de resolução DNS (`ENOTFOUND smtp.example.com`) ao tentar disparar e-mails.
+* **Solução**: Ajustou-se o `compose.yml` para utilizar a diretiva explícita `env_file: - ./backend/.env`. Isso garantiu que o Compose carregue diretamente o arquivo de ambiente editado no back-end, injetando as variáveis no container sem necessidade de duplicar arquivos.
+
+### 3. Conflito de Portas e Gerenciamento de Containers Órfãos
+* **Dificuldade**: Durante testes de recriação de containers em ambientes com múltiplas execuções, ocorreu o erro `Bind for 0.0.0.0:8080 failed: port is already allocated`, indicando que a porta do host já estava vinculada a um container remanescente em segundo plano.
+* **Solução**: Foi realizada uma inspeção via `docker ps -a` para rastrear processos que mantinham a porta aberta, efetuando a finalização e remoção com `docker stop` e `docker rm`. Para evitar recorrência, padronizou-se o fluxo de encerramento utilizando `docker compose down`, que desmonta os containers, redes e vínculos de porta de forma limpa.
+
+### 4. Cache de Assets Estáticos do Navegador Durante o Ciclo de Build
+* **Dificuldade**: Ao atualizar o código-fonte do front-end e reconstruir as imagens Docker, o navegador persistia servindo versões antigas em cache dos arquivos `app.js` e `style.css`, dando a falsa impressão de que o container não havia sido atualizado.
+* **Solução**: O fluxo de desenvolvimento foi ajustado para reconstruir as imagens explicitamente com `docker compose up -d --build` e forçar o recarregamento limpo no navegador através de *Hard Reload* (`Ctrl + Shift + R` ou limpeza de cache no DevTools), garantindo que os novos assets compilados pelo Nginx fossem imediatamente baixados.
+

@@ -46,9 +46,9 @@ const comissoes = {
   ],
   adicionais: [
     { id: 25, nome: 'Render detalhada',    descricao: 'Acabamento com mais detalhes', preco: 15 },
-    { id: 26, nome: 'Fundo simples',       descricao: 'Fundo com cor ou gradiente',  preco: 10 },
-    { id: 27, nome: 'Fundo detalhado',     descricao: 'Fundo com cenário ilustrado',  preco: 25 },
-    { id: 28, nome: 'Personagem adicional',descricao: '+1 personagem na arte',        preco: 30 }
+    { id: 26, nome: 'NSFW/gore complexo',       descricao: 'NSFW/gore complexos na arte',  preco: 25 },
+    { id: 27, nome: 'Fundo complexo',     descricao: 'Fundo com composição detalhada',  preco: 20 },
+    { id: 28, nome: 'Personagem adicional',descricao: '+1 personagem na arte (50% do valor base)', preco: 0, dinamico: true }
   ]
 };
 
@@ -73,7 +73,7 @@ app.get('/api/comissoes', (req, res) => {
 // 2. Endpoint POST /api/pedidos - Processa novo pedido e envia e-mail de notificação
 app.post('/api/pedidos', async (req, res) => {
   try {
-    const { cliente, base, bases, categoria, adicionais = [], observacoes = '' } = req.body;
+    const { cliente, base, bases, categoria, adicionais = [], personagensAdicionais = [], observacoes = '' } = req.body;
     const isMulti = Array.isArray(bases) && bases.length > 0;
 
     // Validação dos dados do cliente
@@ -119,13 +119,27 @@ app.post('/api/pedidos', async (req, res) => {
       }
     }
 
+    // Processamento dos personagens adicionais (50% do valor base)
+    const extrasResolvidos = [];
+    let precoPersonagensAdicionais = 0;
+    if (Array.isArray(personagensAdicionais)) {
+      for (const extra of personagensAdicionais) {
+        const baseItem = comissoes.bases.find(b => b.id === Number(extra.baseId));
+        if (baseItem) {
+          const precoExtra = baseItem.preco / 2;
+          extrasResolvidos.push({ ...baseItem, precoOriginal: baseItem.preco, precoExtra });
+          precoPersonagensAdicionais += precoExtra;
+        }
+      }
+    }
+
     // Cálculo do valor total
-    const totalAdicionais = adicionaisSelecionados.reduce((acc, curr) => acc + curr.preco, 0);
-    const precoTotal = precoBase + totalAdicionais;
+    const totalAdicionais = adicionaisSelecionados.filter(a => !a.dinamico).reduce((acc, curr) => acc + (curr.preco || 0), 0);
+    const precoTotal = precoBase + totalAdicionais + precoPersonagensAdicionais;
 
     // Montagem das linhas dos adicionais na tabela HTML
-    const adicionaisHtmlRows = adicionaisSelecionados.length > 0
-      ? adicionaisSelecionados
+    const adicionaisHtmlRows = adicionaisSelecionados.filter(a => !a.dinamico).length > 0
+      ? adicionaisSelecionados.filter(a => !a.dinamico)
           .map(
             ad => `
             <tr>
@@ -140,6 +154,21 @@ app.post('/api/pedidos', async (req, res) => {
             Nenhum adicional selecionado
           </td>
         </tr>`;
+
+    // Montagem das linhas dos personagens adicionais no e-mail
+    const personagensAdicionaisHtmlRows = extrasResolvidos.length > 0
+      ? extrasResolvidos
+          .map(
+            p => `
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">
+                Personagem extra: ${p.categoria}${p.tipo ? ' — ' + p.tipo : ''} (${p.estilo}) <span style="color: #6366f1; font-weight: bold;">50%</span>
+              </td>
+              <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${p.precoExtra.toFixed(2)}</td>
+            </tr>`
+          )
+          .join('')
+      : '';
 
     // Template HTML formatado do e-mail
     const emailHtml = `
@@ -187,6 +216,7 @@ app.post('/api/pedidos', async (req, res) => {
               </tr>`
               }
               ${adicionaisHtmlRows}
+              ${personagensAdicionaisHtmlRows}
               <tr style="font-weight: bold; background-color: #f1f5f9;">
                 <td style="padding: 12px 10px; border-top: 2px solid #94a3b8; color: #0f172a;">Total</td>
                 <td style="padding: 12px 10px; border-top: 2px solid #94a3b8; text-align: right; color: #16a34a; font-size: 16px;">
